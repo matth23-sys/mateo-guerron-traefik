@@ -1,4 +1,4 @@
-name: app mateo
+name: Python application
 
 on:
   push:
@@ -12,30 +12,20 @@ permissions:
 
 jobs:
   build:
-    runs-on: self-hosted   # 👈 CORRE DIRECTAMENTE EN EL VPS
+    runs-on: self-hosted    # 👈 USA TU RUNNER LOCAL EN EL VPS
 
     steps:
-    - uses: actions/checkout@v4
+    - name: 📦 Checkout del código
+      uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-    - name: 🔐 Login to GitHub Container Registry
+    - name: 🔐 Login a GitHub Container Registry
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: 🏗️ Build and push Docker image
+    - name: 🏗️ Build & Push Docker image
       uses: docker/build-push-action@v6
       with:
         context: .
@@ -43,25 +33,26 @@ jobs:
         push: true
         tags: ghcr.io/matth23-sys/mateo-guerron-traefik:latest
 
-    - name: 🚀 Deploy Docker Swarm Stack (local)
+    - name: 🚀 Deploy Docker Swarm Stack
       run: |
+        echo "📁 Creando carpeta de despliegue"
         mkdir -p ~/deploy
+
+        echo "📄 Copiando stack.yml"
         cp stack.yml ~/deploy/stack.yml
 
-        echo "🔐 Login a GHCR"
+        echo "🔐 Login a GHCR desde el servidor"
         echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-        echo "⬇️ Pulling image"
+        echo "⬇️ Descargando imagen actualizada"
         docker pull ghcr.io/matth23-sys/mateo-guerron-traefik:latest
 
-        cd ~/deploy
-        
-        echo "🛑 Removing previous stack"
+        echo "🛑 Eliminando stack previo"
         docker stack rm mateo || true
         sleep 20
 
-        echo "🚢 Deploying new stack"
-        docker stack deploy --with-registry-auth -c stack.yml mateo
+        echo "🚢 Desplegando stack mateo"
+        docker stack deploy --with-registry-auth -c ~/deploy/stack.yml mateo
 
-        echo "📦 Active containers:"
+        echo "📦 Contenedores activos:"
         docker ps
