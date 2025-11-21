@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  mateoapp:
+    image: ghcr.io/matth23-sys/mateo-guerron-traefik:latest
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+
+        # HTTP → HTTPS
+        - "traefik.http.routers.mateoapp.entrypoints=http"
+        - "traefik.http.routers.mateoapp.rule=Host(`pgmoreno.byronrm.com`)"
+        - "traefik.http.middlewares.mateoapp-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.mateoapp.middlewares=mateoapp-https-redirect"
+
+        # HTTPS
+        - "traefik.http.routers.mateoapp-secure.entrypoints=https"
+        - "traefik.http.routers.mateoapp-secure.rule=Host(`pgmoreno.byronrm.com`)"
+        - "traefik.http.routers.mateoapp-secure.tls=true"
+        - "traefik.http.routers.mateoapp-secure.tls.certresolver=http"
+        - "traefik.http.routers.mateoapp-secure.service=mateoapp"
+
+        # Servicio → puerto interno del contenedor
+        - "traefik.http.services.mateoapp.loadbalancer.server.port=80"
+
+        # Red pública de Traefik
+        - "traefik.docker.network=traefik-public"
+
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true
