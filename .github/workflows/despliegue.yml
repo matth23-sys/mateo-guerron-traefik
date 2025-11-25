@@ -1,5 +1,6 @@
 name: Python application
 
+
 on:
   push:
     branches: [ "main" ]
@@ -12,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: self-hosted    # 👈 USA TU RUNNER LOCAL EN EL VPS
+    runs-on: self-hosted    #  USA TU RUNNER LOCAL EN EL VPS
 
     steps:
     - name: 📦 Checkout del código

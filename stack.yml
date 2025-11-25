@@ -1,5 +1,6 @@
 version: "3.8"
 
+
 services:
   mateoapp:
     image: ghcr.io/matth23-sys/mateo-guerron-traefik:latest
